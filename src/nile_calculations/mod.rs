@@ -1,6 +1,7 @@
 use bigdecimal::{BigDecimal};
 use std::str::FromStr;
 
+/// Calculate the staker token rewards by multiplying the staker proportion by the tokens per day.
 pub fn nile_staker_token_rewards(sp: &str, tpd: &str) -> String {
     let staker_proportion = BigDecimal::from_str(sp).unwrap();
     let tokens_per_day = BigDecimal::from_str(tpd).unwrap();
@@ -9,12 +10,13 @@ pub fn nile_staker_token_rewards(sp: &str, tpd: &str) -> String {
     (staker_proportion * tokens_per_day).with_precision_round(final_prec, bigdecimal::RoundingMode::HalfUp).to_string()
 }
 
+/// Calculate the operator token rewards by multiplying the total staker operator tokens by the
+/// operator commission, which is currently fixed at 10%
 pub fn nile_operator_token_rewards(tsot: &str) -> String {
     let total_staker_operator_tokens = BigDecimal::from_str(tsot).unwrap();
     let operator_commission = BigDecimal::from_str(".10").unwrap();
 
     let result = operator_commission * total_staker_operator_tokens;
-
 
     result.with_scale_round(0, bigdecimal::RoundingMode::HalfUp).to_string()
 }
