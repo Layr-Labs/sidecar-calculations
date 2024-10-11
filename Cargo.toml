@@ -1,9 +1,18 @@
 [package]
-name = "sqlite-functions"
+name = "sidecar-calculations"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 bigdecimal = { version = "0.4", features = [ "serde-json" ] }  # '-' not '_'
+rusqlite = { version = "0.32.0", features = ["bundled"] }
+libc = "0.2.159"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+libsql-sys = "0.8.0"
+
+[dev-dependencies]
+
