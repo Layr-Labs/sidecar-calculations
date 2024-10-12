@@ -28,14 +28,6 @@ pub extern "C" fn nile_staker_token_rewards_c(sp: *const c_char, tpd: *const c_c
     CString::new(result).unwrap().into_raw()
 }
 
-#[no_mangle]
-pub extern "C" fn free_c_string(s: *mut c_char) {
-    unsafe {
-        if s.is_null() { return }
-        CString::from_raw(s)
-    };
-}
-
 /// Calculate the operator token rewards by multiplying the total staker operator tokens by the
 /// operator commission, which is currently fixed at 10%
 pub fn nile_operator_token_rewards(tsot: &str) -> String {
@@ -45,4 +37,16 @@ pub fn nile_operator_token_rewards(tsot: &str) -> String {
     let result = operator_commission * total_staker_operator_tokens;
 
     result.with_scale_round(0, bigdecimal::RoundingMode::HalfUp).to_string()
+}
+
+#[no_mangle]
+pub extern "C" fn nile_operator_token_rewards_c(tsot: *const c_char) -> *mut c_char {
+    let tsot_str = unsafe {
+        assert!(!tsot.is_null());
+        CStr::from_ptr(tsot).to_str().unwrap()
+    };
+
+    let result = nile_operator_token_rewards(tsot_str);
+
+    CString::new(result).unwrap().into_raw()
 }
