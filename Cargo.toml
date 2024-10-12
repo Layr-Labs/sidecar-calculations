@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [lib]
-crate-type = ["cdylib"]
+name = "sidecar_calculations"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 bigdecimal = { version = "0.4", features = [ "serde-json" ] }  # '-' not '_'

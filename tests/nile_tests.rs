@@ -1,4 +1,4 @@
-use sqlite_functions::*;
+use sidecar_calculations::*;
 
 #[cfg(test)]
 mod nile_tests {
@@ -49,7 +49,7 @@ mod nile_tests {
             let expected_result = &result[2];
 
             let staker_tokens = math::subtract_big(total_staker_operator_payout, operator_tokens);
-            if staker_tokens != "" && staker_tokens != *expected_result {
+            if staker_tokens == "" || staker_tokens != *expected_result {
                 println!("Actual:   {}\nExpected: {}\n", staker_tokens, expected_result);
                 errors += 1;
             }

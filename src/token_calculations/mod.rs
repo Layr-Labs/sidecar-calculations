@@ -47,3 +47,30 @@ pub extern "C" fn operator_token_rewards_c(tsot: *const c_char) -> *mut c_char {
 
     CString::new(result).unwrap().into_raw()
 }
+
+/// Calculate the staker weight by multiplying the staker shares by the multiplier.
+pub fn staker_weight(mul: &str, shares: &str) -> String {
+    let multiplier = BigDecimal::from_str(mul).unwrap();
+    let staker_shares = BigDecimal::from_str(shares).unwrap();
+
+    let final_prec = core::num::NonZeroU64::try_from(38).unwrap();
+    let result = (multiplier * staker_shares).with_precision_round(final_prec, bigdecimal::RoundingMode::HalfEven);
+
+    result.with_scale_round(0, bigdecimal::RoundingMode::Down).to_string()
+}
+
+#[no_mangle]
+pub extern "C" fn staker_weight_c(mul: *const c_char, shares: *const c_char) -> *mut c_char {
+    let mul_str = unsafe {
+        assert!(!mul.is_null());
+        CStr::from_ptr(mul).to_str().unwrap()
+    };
+    let shares_str = unsafe {
+        assert!(!shares.is_null());
+        CStr::from_ptr(shares).to_str().unwrap()
+    };
+
+    let result = staker_weight(mul_str, shares_str);
+
+    CString::new(result).unwrap().into_raw()
+}

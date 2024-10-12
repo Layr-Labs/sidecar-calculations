@@ -29,7 +29,6 @@ void add_big_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
 
     sqlite3_result_text(context, sum, -1, SQLITE_TRANSIENT);
 }
-
 void subtract_big_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
     if (argc != 2) {
         sqlite3_result_error(context, "subtract_big() requires two arguments", -1);
@@ -55,6 +54,27 @@ void subtract_big_sqlite(sqlite3_context *context, int argc, sqlite3_value **arg
 
     sqlite3_result_text(context, diff, -1, SQLITE_TRANSIENT);
 }
+void big_gt_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
+    if (argc != 2) {
+        sqlite3_result_error(context, "big_gt() requires two arguments", -1);
+        return;
+    }
+    const char* a = (const char*)sqlite3_value_text(argv[0]);
+    if (!a) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* b = (const char*)sqlite3_value_text(argv[1]);
+    if (!b) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    int gt = big_gt_c(a, b);
+    sqlite3_result_int(context, gt);
+}
+
 
 void amazon_staker_token_rewards_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
     if (argc != 2) {
@@ -196,6 +216,32 @@ void operator_token_rewards_sqlite(sqlite3_context *context, int argc, sqlite3_v
     sqlite3_result_text(context, tokens, -1, SQLITE_TRANSIENT);
 }
 
+void staker_weight_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
+    if (argc != 2) {
+        sqlite3_result_error(context, "staker_weight() requires two arguments", -1);
+        return;
+    }
+    const char* multiplier = (const char*)sqlite3_value_text(argv[0]);
+    if (!multiplier) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* shares = (const char*)sqlite3_value_text(argv[1]);
+    if (!shares) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    char* weight = staker_weight_c(multiplier, shares);
+    if (!weight) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    sqlite3_result_text(context, weight, -1, SQLITE_TRANSIENT);
+}
+
 
 int sqlite3_calculations_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_routines *pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
@@ -209,6 +255,12 @@ int sqlite3_calculations_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_ro
     }
 
     rc = sqlite3_create_function(db, "subtract_big", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, subtract_big_sqlite, 0, 0);
+    if (rc != SQLITE_OK) {
+        *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
+        return rc;
+    }
+
+    rc = sqlite3_create_function(db, "big_gt", 2, SQLITE_DETERMINISTIC, 0, big_gt_sqlite, 0, 0);
     if (rc != SQLITE_OK) {
         *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
         return rc;
@@ -245,6 +297,12 @@ int sqlite3_calculations_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_ro
         return rc;
     }
     rc = sqlite3_create_function(db, "operator_token_rewards", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, operator_token_rewards_sqlite, 0, 0);
+    if (rc != SQLITE_OK) {
+        *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
+        return rc;
+    }
+
+    rc = sqlite3_create_function(db, "staker_weight", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, staker_weight_sqlite, 0, 0);
     if (rc != SQLITE_OK) {
         *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
         return rc;
