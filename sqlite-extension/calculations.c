@@ -242,6 +242,58 @@ void staker_weight_sqlite(sqlite3_context *context, int argc, sqlite3_value **ar
     sqlite3_result_text(context, weight, -1, SQLITE_TRANSIENT);
 }
 
+void tokens_per_day_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
+    if (argc != 2) {
+        sqlite3_result_error(context, "tokens_per_day() requires two arguments", -1);
+        return;
+    }
+    const char* a = (const char*)sqlite3_value_text(argv[0]);
+    if (!a) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* b = (const char*)sqlite3_value_text(argv[1]);
+    if (!b) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    char* tpd = tokens_per_day_c(a, b);
+    if (!tpd) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    sqlite3_result_text(context, tpd, -1, SQLITE_TRANSIENT);
+}
+
+void tokens_per_day_decimal(sqlite3_context *context, int argc, sqlite3_value **argv) {
+    if (argc != 2) {
+        sqlite3_result_error(context, "tokens_per_day_decimal() requires two arguments", -1);
+        return;
+    }
+    const char* a = (const char*)sqlite3_value_text(argv[0]);
+    if (!a) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* b = (const char*)sqlite3_value_text(argv[1]);
+    if (!b) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    char* tpd = tokens_per_day_decimal_c(a, b);
+    if (!tpd) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    sqlite3_result_text(context, tpd, -1, SQLITE_TRANSIENT);
+}
+
 
 int sqlite3_calculations_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_routines *pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
@@ -303,6 +355,18 @@ int sqlite3_calculations_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_ro
     }
 
     rc = sqlite3_create_function(db, "staker_weight", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, staker_weight_sqlite, 0, 0);
+    if (rc != SQLITE_OK) {
+        *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
+        return rc;
+    }
+
+    rc = sqlite3_create_function(db, "tokens_per_day", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, tokens_per_day_sqlite, 0, 0);
+    if (rc != SQLITE_OK) {
+        *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
+        return rc;
+    }
+
+    rc = sqlite3_create_function(db, "tokens_per_day_decimal", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, tokens_per_day_decimal, 0, 0);
     if (rc != SQLITE_OK) {
         *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
         return rc;

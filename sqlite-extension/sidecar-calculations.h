@@ -26,6 +26,9 @@ char* operator_token_rewards_c(const char* tsot);
 
 char* staker_weight_c(const char* multiplier, const char* shares);
 
+char* tokens_per_day_c(const char* a, const char* b);
+char* tokens_per_day_decimal_c(const char* a, const char* b);
+
 #ifdef __cplusplus
 }
 #endif
