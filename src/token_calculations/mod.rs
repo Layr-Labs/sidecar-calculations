@@ -119,9 +119,14 @@ pub fn tokens_per_day(amount: &str, duration: &str) -> String {
         // heuristically, this seems to be the parameters postgres uses.
         let max_left_digits = 16;
         let max_right_digits = 12;
-        let exception_max_right_digits = 16;
         let max_total_digits = 20;
 
+        // For really small left whole values, we can make the decimal precision a little bigger,
+        // all because postgres says so...
+        let exception_max_right_digits = 16;
+
+
+        // If the left side is too big, just truncate it and return
         if left_side_digits > max_left_digits {
             return scaled_tpd.with_scale_round(0, RoundingMode::HalfEven).to_string();
         }
@@ -134,15 +139,12 @@ pub fn tokens_per_day(amount: &str, duration: &str) -> String {
                 decimal_digits = exception_max_right_digits;
             }
         } else {
+            // Lol guess the number is too big so we have to rely on our max values from above
             if decimal_digits > max_right_digits {
                 decimal_digits = max_right_digits;
             }
         }
 
-
-        println!("Left digits: {}", left_side_digits);
-        println!("Decimal digits: {}", decimal_digits);
-        println!("Total digits: {}", left_side_digits + decimal_digits);
         scaled_tpd = scaled_tpd.with_scale_round(decimal_digits, RoundingMode::HalfEven);
     }
 
