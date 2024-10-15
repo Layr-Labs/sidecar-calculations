@@ -81,6 +81,8 @@ pub extern "C" fn staker_weight_c(mul: *const c_char, shares: *const c_char) -> 
 /// This function is entirely powered by heuristics. The corresponding test function takes
 /// inputs and outputs from mainnet, testnet and preprod for the for the period of time
 /// this function was active to ensure its correctness.
+///
+/// Original query: floor(amount/(duration/86400)) as tokens_per_day
 pub fn tokens_per_day(amount: &str, duration: &str) -> String {
     let amount_d = BigDecimal::from_str(amount).unwrap();
     let duration_d = duration.parse::<i64>().unwrap();
@@ -168,15 +170,13 @@ pub extern "C" fn tokens_per_day_c(amount: *const c_char, duration: *const c_cha
     CString::new(result).unwrap().into_raw()
 }
 
+/// Calculate tokens per_day_decimal which isnt actually a decimal since we're technically using a
+/// floor function on the result, but thats the column name in the database so we're stuck with it.
+///
+/// Original query: floor(tokens_per_day) as tokens_per_day_decimal
 pub fn tokens_per_day_decimal(amount: &str, duration: &str) -> String {
-    let amount = BigDecimal::from_str(amount).unwrap();
-    let duration = BigDecimal::from_str(duration).unwrap();
-
-    let per_day = duration / BigDecimal::from_str("86400").unwrap();
-
-    let tpd = (amount / per_day).with_prec(22);
-
-    tpd.to_string()
+    let tpd = BigDecimal::from_str(tokens_per_day(amount, duration).as_str()).unwrap();
+    return tpd.with_scale_round(0, RoundingMode::Floor).to_string();
 }
 
 #[no_mangle]
