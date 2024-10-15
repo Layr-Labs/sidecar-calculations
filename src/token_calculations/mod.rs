@@ -77,62 +77,72 @@ pub extern "C" fn staker_weight_c(mul: *const c_char, shares: *const c_char) -> 
     CString::new(result).unwrap().into_raw()
 }
 
+/// Calculate the operator weight by multiplying the operator shares by the multiplier.
+/// This function is entirely powered by heuristics. The corresponding test function takes
+/// inputs and outputs from mainnet, testnet and preprod for the for the period of time
+/// this function was active to ensure its correctness.
 pub fn tokens_per_day(amount: &str, duration: &str) -> String {
     let amount_d = BigDecimal::from_str(amount).unwrap();
     let duration_d = duration.parse::<i64>().unwrap();
 
-    let mut per_day: BigDecimal = (BigDecimal::from(duration_d) / 86400);
+    let mut per_day: BigDecimal = BigDecimal::from(duration_d) / 86400;
+
+    // If its an integer, strip off all the useless decimal 0s
     if per_day.is_integer() {
         per_day = per_day.with_scale_round(0, RoundingMode::Down);
     } else {
         per_day = per_day.with_scale(28);
     }
-    println!("per day:  {}", per_day);
     let mut tpd = amount_d / per_day;
-    println!("tpd:      {}", tpd);
 
-    let mut scaled = false;
+    // If its less than 1, round to 20 decimal places, because that totally makes sense /s
     if tpd < BigDecimal::from(1) {
-        scaled = true;
         tpd = tpd.with_scale_round(20, bigdecimal::RoundingMode::HalfEven);
     }
-    println!("tpd 2:    {} (scaled {})", tpd, scaled);
-
-    // strip any trailing 0s
-    //tpd = tpd.normalized();
-
     let mut scale = 16;
     if tpd < BigDecimal::from(1) {
         scale = 20;
     }
-    println!("Pre scale digits: {}", tpd.digits());
     let mut scaled_tpd = tpd.with_scale_round(scale, RoundingMode::HalfEven);
-    println!("scaled_tpd: {}", scaled_tpd);
-    println!("Digits: {}", scaled_tpd.digits());
 
 
+    // If its an integer, just return it
     if scaled_tpd.is_integer() {
         return scaled_tpd.with_scale_round(0, RoundingMode::HalfEven).to_string();
     }
-    // this kinda works
+
+    // God this is so ugly but it works...
     if scaled_tpd >= BigDecimal::from(1) {
         let b = scaled_tpd.to_bigint().unwrap();
-        let left_side_digits = b.to_string().len();
+        let left_side_digits = b.to_string().len() as i64;
 
-        if left_side_digits >= 18 {
-            println!("Truncating....");
+        // heuristically, this seems to be the parameters postgres uses.
+        let max_left_digits = 16;
+        let max_right_digits = 12;
+        let exception_max_right_digits = 16;
+        let max_total_digits = 20;
+
+        if left_side_digits > max_left_digits {
             return scaled_tpd.with_scale_round(0, RoundingMode::HalfEven).to_string();
         }
 
-        
-        let mut decimal_digits: i64 = scaled_tpd.digits() as i64 - left_side_digits as i64;
-        if decimal_digits > 12 {
-            decimal_digits = 12;
+        let mut decimal_digits: i64 = max_total_digits - left_side_digits;
+        // for small left side numbers, let the decimal be a little bigger
+        // because who the hell knows why...thats what postgres does for some reason...
+        if left_side_digits < 4 {
+            if decimal_digits > exception_max_right_digits {
+                decimal_digits = exception_max_right_digits;
+            }
+        } else {
+            if decimal_digits > max_right_digits {
+                decimal_digits = max_right_digits;
+            }
         }
 
-        let total_digits = left_side_digits as i64 + decimal_digits;
 
+        println!("Left digits: {}", left_side_digits);
         println!("Decimal digits: {}", decimal_digits);
+        println!("Total digits: {}", left_side_digits + decimal_digits);
         scaled_tpd = scaled_tpd.with_scale_round(decimal_digits, RoundingMode::HalfEven);
     }
 
