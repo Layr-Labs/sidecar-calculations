@@ -74,3 +74,26 @@ pub extern "C" fn big_gt_c(a: *const c_char, b: *const c_char) -> i8 {
         false => 0,
     }
 }
+
+pub fn numeric_multiply(multiplier_str: &str, shares_str: &str) -> String {
+    let a = BigDecimal::from_str(multiplier_str).unwrap();
+    let b = BigDecimal::from_str(shares_str).unwrap();
+
+    (a * b).to_string()
+}
+
+#[no_mangle]
+pub extern "C" fn numeric_multiply_c(a: *const c_char, b: *const c_char) -> *mut c_char {
+    let a_str = unsafe {
+        assert!(!a.is_null());
+        CStr::from_ptr(a).to_str().unwrap()
+    };
+    let b_str = unsafe {
+        assert!(!b.is_null());
+        CStr::from_ptr(b).to_str().unwrap()
+    };
+
+    let result = numeric_multiply(a_str, b_str);
+
+    CString::new(result).unwrap().into_raw()
+}
