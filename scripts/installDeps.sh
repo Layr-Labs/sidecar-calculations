@@ -18,22 +18,16 @@ apt_update_and_install() {
 }
 
 if [[ "$OS" == "linux" ]]; then
-    apt_update_and_install -y \
-        make \
+    apt-get update
+    apt-get install -y \
         curl \
+        make \
         git \
-        software-properties-common \
-        jq \
         build-essential \
         sqlite3 \
         libsqlite3-0 \
         libsqlite3-dev
 
-    which go
-    if [[ $? != 0 ]]; then
-        echo "Installing Go 1.22"
-        apt-get install -y golang
-    fi
 elif [[ "$OS" == "darwin" ]]; then
     hasBrew=$(which brew)
     if [[ -z $hasBrew ]]; then
