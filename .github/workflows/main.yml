@@ -15,8 +15,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y qemu-user-static debootstrap
+          sudo mkdir chroot /arm64-chroot/build
           sudo debootstrap --arch=arm64 --variant=minbase focal /arm64-chroot
-          sudo cp /usr/bin/qemu-aarch64-static /arm64-chroot/usr/bin/
+          sudo cp /usr/bin/qemu-aarch64-static arm64-chroot/usr/bin/
+          sudo mount -t proc /proc /arm64-chroot/proc/
+          sudo mount --rbind /sys /arm64-chroot/sys/
+          sudo mount --rbind /dev /arm64-chroot/dev/
+          sudo mount --make-rslave /arm64-chroot/dev/
+          sudo mount --rbind /dev/pts /arm64-chroot/dev/pts/
+          sudo mount --make-rslave /arm64-chroot/dev/pts/
+          sudo chroot arm64-chroot /usr/bin/qemu-aarch64-static /bin/bash -c '/debootstrap/debootstrap --second-stage'
 
       - name: Install build dependencies in chroot
         run: |

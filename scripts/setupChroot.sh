@@ -23,4 +23,4 @@ sudo mount --make-rslave "$CHROOT_PATH/dev/pts/"
 sudo cp /etc/resolv.conf "$CHROOT_PATH/etc/resolv.conf"
 
 # Complete the install
-sudo chroot arm64-chroot /usr/bin/qemu-aarch64-static /bin/bash -c '/debootstrap/debootstrap --second-stage'
+sudo chroot /arm64-chroot /usr/bin/qemu-aarch64-static /bin/bash -c '/debootstrap/debootstrap --second-stage'
