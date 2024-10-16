@@ -8,3 +8,4 @@ release/extension:
 
 .PHONY: release
 release: release/cargo release/extension
+	./scripts/bundleRelease.sh
