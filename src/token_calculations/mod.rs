@@ -77,6 +77,41 @@ pub extern "C" fn staker_weight_c(mul: *const c_char, shares: *const c_char) -> 
     CString::new(result).unwrap().into_raw()
 }
 
+/// Calculate the staker proportion
+///
+/// original query: FLOOR((staker_weight / total_weight) * 1000000000000000) / 1000000000000000
+pub fn staker_proportion(staker_weight: &str, total_staker_weight: &str) -> String {
+    let staker_weight = BigDecimal::from_str(staker_weight).unwrap();
+    let total_staker_weight = BigDecimal::from_str(total_staker_weight).unwrap();
+
+    let final_prec = core::num::NonZeroU64::try_from(38).unwrap();
+    let result = (staker_weight / total_staker_weight).with_precision_round(final_prec, bigdecimal::RoundingMode::HalfEven);
+
+    let mut pre_result = result * BigDecimal::from_str("1000000000000000").unwrap();
+
+    pre_result = pre_result.with_scale_round(0, bigdecimal::RoundingMode::Floor);
+
+    let final_result = pre_result / BigDecimal::from_str("1000000000000000").unwrap();
+
+    final_result.to_string()
+}
+
+#[no_mangle]
+pub extern "C" fn staker_proportion_c(staker_weight: *const c_char, total_staker_weight: *const c_char) -> *mut c_char {
+    let staker_weight_str = unsafe {
+        assert!(!staker_weight.is_null());
+        CStr::from_ptr(staker_weight).to_str().unwrap()
+    };
+    let total_staker_weight_str = unsafe {
+        assert!(!total_staker_weight.is_null());
+        CStr::from_ptr(total_staker_weight).to_str().unwrap()
+    };
+
+    let result = staker_proportion(staker_weight_str, total_staker_weight_str);
+
+    CString::new(result).unwrap().into_raw()
+}
+
 /// Calculate the operator weight by multiplying the operator shares by the multiplier.
 /// This function is entirely powered by heuristics. The corresponding test function takes
 /// inputs and outputs from mainnet, testnet and preprod for the for the period of time
