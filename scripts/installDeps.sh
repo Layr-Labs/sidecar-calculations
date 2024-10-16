@@ -18,7 +18,9 @@ apt_update_and_install() {
 }
 
 if [[ "$OS" == "linux" ]]; then
-    apt_update_and_install -y \
+    sudo add-apt-repository ppa:ubuntu-mozilla-security/ppa
+    sudo apt-get update
+    sudo apt-get install -y \
         curl \
         make \
         git \
