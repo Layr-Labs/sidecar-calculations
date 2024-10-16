@@ -42,6 +42,7 @@ jobs:
           echo 'Installing deps...'
           sudo chroot /arm64-chroot /build/scripts/installDeps.sh
           sudo chroot /arm64-chroot /bin/bash -c "export PATH=$PATH:/root/.cargo/bin"
+          sudo chroot /arm64-chroot /bin/bash -c "echo $PATH; which cargo"
           sudo chroot /arm64-chroot /bin/bash -c "cd /build && make release"
           sudo cp /arm64-chroot/sidecar-calculations-*.tar.gz .
           aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$(cat .release_version)/
