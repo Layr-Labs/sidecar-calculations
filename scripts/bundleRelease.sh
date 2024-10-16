@@ -13,6 +13,11 @@ if [[ -z $VERSION ]]; then
     VERSION=$(git rev-parse --short HEAD)
 fi
 
+# if OS is gnu/linux, strip off the gnu part
+if [[ $OS == "gnu/linux" ]]; then
+    OS="linux"
+fi
+
 filename="sidecar-calculations-${VERSION}-${OS}-${ARCH}.tar.gz"
 
 echo $filename
