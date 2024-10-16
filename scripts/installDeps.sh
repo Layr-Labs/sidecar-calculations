@@ -18,8 +18,7 @@ apt_update_and_install() {
 }
 
 if [[ "$OS" == "linux" ]]; then
-    apt-get update
-    apt-get install -y \
+    apt_update_and_install -y \
         curl \
         make \
         git \
