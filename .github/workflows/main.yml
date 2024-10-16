@@ -41,7 +41,7 @@ jobs:
           sudo cp -r . /arm64-chroot/build
           echo 'Installing deps...'
           sudo chroot /arm64-chroot /build/scripts/installDeps.sh
-          sudo chroot /arm64-chroot /bin/bash -c "cd /build && make release"
+          sudo chroot /arm64-chroot /bin/bash -c ". "$HOME/.cargo/env" && cd /build && make release"
           sudo cp /arm64-chroot/sidecar-calculations-*.tar.gz .
           aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$(cat .release_version)/
       - name: Upload artifacts
