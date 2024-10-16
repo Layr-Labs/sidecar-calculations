@@ -22,5 +22,7 @@ jobs:
         run: |
           sudo mkdir chroot /arm64-chroot/build
           sudo cp -r . /arm64-chroot/build
+          ls -al
           sudo ./scripts/setupChroot.sh
+          echo 'Installing deps...'
           sudo chroot arm64-chroot /build/scripts/installDeps.sh
