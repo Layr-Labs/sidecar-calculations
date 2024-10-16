@@ -24,4 +24,5 @@ jobs:
           sudo chroot /arm64-chroot apt-get install -y build-essential
           sudo mkdir chroot /arm64-chroot/build
           sudo cp -r . /arm64-chroot/build
-          sudo chroot /arm64-chroot /bin/bash -c "pwd"
+          sudo chroot /arm64-chroot /bin/bash -c "uname -a"
+          sudo chroot /arm64-chroot /bin/bash -c "cd /build && ./scripts/installDeps.sh"
