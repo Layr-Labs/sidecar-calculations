@@ -75,9 +75,9 @@ pub extern "C" fn big_gt_c(a: *const c_char, b: *const c_char) -> i8 {
     }
 }
 
-pub fn numeric_multiply(a_str: &str, b_str: &str) -> String {
-    let a = BigDecimal::from_str(a_str).unwrap();
-    let b = BigDecimal::from_str(b_str).unwrap();
+pub fn numeric_multiply(multiplier_str: &str, shares_str: &str) -> String {
+    let a = BigDecimal::from_str(multiplier_str).unwrap();
+    let b = BigDecimal::from_str(shares_str).unwrap();
 
     (a * b).to_string()
 }
