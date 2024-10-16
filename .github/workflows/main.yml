@@ -24,7 +24,7 @@ jobs:
           sudo mount --make-rslave /arm64-chroot/dev/
           sudo mount --rbind /dev/pts /arm64-chroot/dev/pts/
           sudo mount --make-rslave /arm64-chroot/dev/pts/
-          sudo chroot arm64-chroot /usr/bin/qemu-aarch64-static /bin/bash -c '/debootstrap/debootstrap --second-stage'
+          sudo chroot /arm64-chroot /usr/bin/qemu-aarch64-static /bin/bash -c '/debootstrap/debootstrap --second-stage'
 
       - name: Install build dependencies in chroot
         run: |
