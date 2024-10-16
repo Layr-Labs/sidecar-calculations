@@ -17,7 +17,7 @@ jobs:
           sudo apt-get install -y qemu-user-static debootstrap
           sudo mkdir /arm64-chroot
           sudo debootstrap --arch=arm64 --variant=minbase focal /arm64-chroot
-          sudo cp /usr/bin/qemu-aarch64-static arm64-chroot/usr/bin/
+          sudo cp /usr/bin/qemu-aarch64-static /arm64-chroot/usr/bin/
           sudo mount -t proc /proc /arm64-chroot/proc/
           sudo mount --rbind /sys /arm64-chroot/sys/
           sudo mount --rbind /dev /arm64-chroot/dev/
