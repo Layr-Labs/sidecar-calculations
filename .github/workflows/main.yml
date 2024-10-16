@@ -28,7 +28,7 @@ jobs:
           if [[ ${{ github.ref }} == refs/tags/* ]]; then
             echo -n "${{ github.ref }}#refs/tags/" > .release_version
           else
-            git rev-parse --short HEAD > .release_version
+            v=$(git rev-parse --short HEAD) && echo -n $v > .release_version
           fi
       - name: Install build dependencies in chroot
         env:
@@ -60,7 +60,7 @@ jobs:
           if [[ ${{ github.ref }} == refs/tags/* ]]; then
             echo -n "${{ github.ref }}#refs/tags/" > .release_version
           else
-            git rev-parse --short HEAD > .release_version
+            v=$(git rev-parse --short HEAD) && echo -n $v > .release_version
           fi
       - name: Build
         env:
@@ -82,7 +82,7 @@ jobs:
           if [[ ${{ github.ref }} == refs/tags/* ]]; then
             echo -n "${{ github.ref }}#refs/tags/" > .release_version
           else
-            git rev-parse --short HEAD > .release_version
+            v=$(git rev-parse --short HEAD) && echo -n $v > .release_version
           fi
       - name: Build
         env:

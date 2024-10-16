@@ -74,6 +74,31 @@ void big_gt_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
     int gt = big_gt_c(a, b);
     sqlite3_result_int(context, gt);
 }
+void numeric_multiply_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
+    if (argc != 2) {
+        sqlite3_result_error(context, "numeric_multiply() requires two arguments", -1);
+        return;
+    }
+    const char* a = (const char*)sqlite3_value_text(argv[0]);
+    if (!a) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* b = (const char*)sqlite3_value_text(argv[1]);
+    if (!b) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    char* product = numeric_multiply_c(a, b);
+    if (!product) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    sqlite3_result_text(context, product, -1, SQLITE_TRANSIENT);
+}
 
 
 void amazon_staker_token_rewards_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
@@ -313,6 +338,12 @@ int sqlite3_calculations_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_ro
     }
 
     rc = sqlite3_create_function(db, "big_gt", 2, SQLITE_DETERMINISTIC, 0, big_gt_sqlite, 0, 0);
+    if (rc != SQLITE_OK) {
+        *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
+        return rc;
+    }
+
+    rc = sqlite3_create_function(db, "numeric_multiply", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, numeric_multiply_sqlite, 0, 0);
     if (rc != SQLITE_OK) {
         *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
         return rc;

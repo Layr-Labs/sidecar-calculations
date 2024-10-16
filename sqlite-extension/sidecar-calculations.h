@@ -11,6 +11,7 @@ void free_c_string(char* s);
 char* add_big_c(const char* a, const char* b);
 char* subtract_big_c(const char* a, const char* b);
 int big_gt_c(const char* a, const char* b);
+char* numeric_multiply_c(const char* a, const char* b);
 
 // Amazon fork calculations
 char* amazon_staker_token_rewards_c(const char* sp, const char* tpd);
