@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 # Path to the chroot directory
 CHROOT_PATH="/arm64-chroot"
 
