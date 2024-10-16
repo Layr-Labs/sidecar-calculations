@@ -15,13 +15,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y qemu-user-static debootstrap
-          sudo qemu-debootstrap --arch=arm64 --variant=minbase focal arm64-chroot
-          sudo cp /usr/bin/qemu-aarch64-static arm64-chroot/usr/bin/
+          sudo qemu-debootstrap --arch=arm64 --variant=minbase focal /arm64-chroot
+          sudo cp /usr/bin/qemu-aarch64-static /arm64-chroot/usr/bin/
 
       - name: Install build dependencies in chroot
         run: |
-          sudo chroot arm64-chroot apt-get update
-          sudo chroot arm64-chroot apt-get install -y build-essential
-          sudo mkdir chroot arm64-chroot/build
-          sudo cp -r . arm64-chroot/build
-          sudo chroot arm64-chroot /bin/bash -c "pwd"
+          sudo chroot /arm64-chroot apt-get update
+          sudo chroot /arm64-chroot apt-get install -y build-essential
+          sudo mkdir chroot /arm64-chroot/build
+          sudo cp -r . /arm64-chroot/build
+          sudo chroot /arm64-chroot /bin/bash -c "pwd"
