@@ -10,7 +10,6 @@ jobs:
         uses: docker/setup-qemu-action@v2
         with:
           platforms: arm64
-
       - name: Set up ARM64 chroot environment
         run: |
           sudo apt-get update
@@ -24,7 +23,13 @@ jobs:
           sudo mount --make-rslave /arm64-chroot/dev/
           sudo mount --rbind /dev/pts /arm64-chroot/dev/pts/
           sudo mount --make-rslave /arm64-chroot/dev/pts/
-
+      - name: Set release version
+        run: |
+          if [[ ${{ github.ref }} == refs/tags/* ]]; then
+            echo -n "${{ github.ref }}#refs/tags/" > .release_version
+          else
+            git rev-parse --short HEAD > .release_version
+          fi
       - name: Install build dependencies in chroot
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -32,14 +37,13 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           RELEASE_BUCKET_NAME: ${{ vars.RELEASE_BUCKET_NAME }}
         run: |
-          export short_sha=$(git rev-parse --short HEAD)
           sudo mkdir chroot /arm64-chroot/build
           sudo cp -r . /arm64-chroot/build
           echo 'Installing deps...'
           sudo chroot /arm64-chroot /build/scripts/installDeps.sh
           sudo chroot /arm64-chroot /bin/bash -c "cd /build && make release"
           sudo cp /arm64-chroot/sidecar-calculations-*.tar.gz .
-          aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$GITHUB_SHA/
+          aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$(cat .release_version)/
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -51,6 +55,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set release version
+        run: |
+          if [[ ${{ github.ref }} == refs/tags/* ]]; then
+            echo -n "${{ github.ref }}#refs/tags/" > .release_version
+          else
+            git rev-parse --short HEAD > .release_version
+          fi
       - name: Build
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -60,12 +71,19 @@ jobs:
         run: |
           ./scripts/installDeps.sh
           make release
-          aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$GITHUB_SHA/
+          aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$(cat .release_version)/
   build-macos-arm64:
     runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set release version
+        run: |
+          if [[ ${{ github.ref }} == refs/tags/* ]]; then
+            echo -n "${{ github.ref }}#refs/tags/" > .release_version
+          else
+            git rev-parse --short HEAD > .release_version
+          fi
       - name: Build
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -75,4 +93,4 @@ jobs:
         run: |
           ./scripts/installDeps.sh
           make release
-          aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$GITHUB_SHA/
+          aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$(cat .release_version)/
