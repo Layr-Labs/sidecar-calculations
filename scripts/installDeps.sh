@@ -25,8 +25,10 @@ if [[ "$OS" == "linux" ]]; then
         build-essential \
         sqlite3 \
         libsqlite3-0 \
-        libsqlite3-dev
+        libsqlite3-dev \
+        rustup
 
+    rustup toolchain install stable
 elif [[ "$OS" == "darwin" ]]; then
     hasBrew=$(which brew)
     if [[ -z $hasBrew ]]; then
@@ -42,12 +44,12 @@ elif [[ "$OS" == "darwin" ]]; then
         echo "Please install Xcode to continue"
         exit 1
     fi
+
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    . "$HOME/.cargo/env"
 else
     echo "Unsupported OS: $OS"
     exit 1
 fi
-
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-. "$HOME/.cargo/env"
 
 which cargo

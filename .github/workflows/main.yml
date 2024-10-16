@@ -41,14 +41,8 @@ jobs:
           sudo cp -r . /arm64-chroot/build
           echo 'Installing deps...'
           sudo chroot /arm64-chroot /build/scripts/installDeps.sh
-          sudo chroot /arm64-chroot /bin/bash -c "export PATH=$PATH:/root/.cargo/bin"
-          echo "-------"
-          sudo chroot /arm64-chroot /bin/bash -c "echo $PATH"
-          echo "-------"
+          echo "-------\nwhich cargo\n\n"
           sudo chroot /arm64-chroot /bin/bash -c "which cargo"
-          echo "-------"
-          sudo chroot /arm64-chroot /bin/bash -c "source $HOME/.cargo/env"
-          echo "-------"
 
           sudo chroot /arm64-chroot /bin/bash -c "cd /build && make release"
           echo "-------"
