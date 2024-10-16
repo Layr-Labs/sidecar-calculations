@@ -1,3 +1,4 @@
+// FFI for rust functions in sidecar-calculations
 #ifndef SIDECAR_CALCULATIONS_H
 #define SIDECAR_CALCULATIONS_H
 
@@ -26,6 +27,7 @@ char* staker_token_rewards_c(const char* sp, const char* tpd);
 char* operator_token_rewards_c(const char* tsot);
 
 char* staker_weight_c(const char* multiplier, const char* shares);
+char* staker_proportion_c(const char* staker_weight, const char* total_staker_weight);
 
 char* tokens_per_day_c(const char* a, const char* b);
 char* tokens_per_day_decimal_c(const char* a, const char* b);

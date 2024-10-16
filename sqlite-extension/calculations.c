@@ -266,6 +266,31 @@ void staker_weight_sqlite(sqlite3_context *context, int argc, sqlite3_value **ar
 
     sqlite3_result_text(context, weight, -1, SQLITE_TRANSIENT);
 }
+void staker_proportion_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
+    if (argc != 2) {
+        sqlite3_result_error(context, "staker_proportion() requires two arguments", -1);
+        return;
+    }
+    const char* staker_weight = (const char*)sqlite3_value_text(argv[0]);
+    if (!staker_weight) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* total_staker_weight = (const char*)sqlite3_value_text(argv[1]);
+    if (!total_staker_weight) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    char* proportion = staker_proportion_c(staker_weight, total_staker_weight);
+    if (!proportion) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    sqlite3_result_text(context, proportion, -1, SQLITE_TRANSIENT);
+}
 
 void tokens_per_day_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
     if (argc != 2) {
@@ -292,7 +317,6 @@ void tokens_per_day_sqlite(sqlite3_context *context, int argc, sqlite3_value **a
 
     sqlite3_result_text(context, tpd, -1, SQLITE_TRANSIENT);
 }
-
 void tokens_per_day_decimal(sqlite3_context *context, int argc, sqlite3_value **argv) {
     if (argc != 2) {
         sqlite3_result_error(context, "tokens_per_day_decimal() requires two arguments", -1);
@@ -386,6 +410,12 @@ int sqlite3_calculations_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_ro
     }
 
     rc = sqlite3_create_function(db, "staker_weight", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, staker_weight_sqlite, 0, 0);
+    if (rc != SQLITE_OK) {
+        *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
+        return rc;
+    }
+
+    rc = sqlite3_create_function(db, "staker_proportion", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, staker_proportion_sqlite, 0, 0);
     if (rc != SQLITE_OK) {
         *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
         return rc;

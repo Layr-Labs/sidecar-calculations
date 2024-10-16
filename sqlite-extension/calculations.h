@@ -22,6 +22,7 @@ void staker_token_rewards_sqlite(sqlite3_context *context, int argc, sqlite3_val
 void operator_token_rewards_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv);
 
 void staker_weight_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv);
+void staker_proportion_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv);
 
 void tokens_per_day_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv);
 void tokens_per_day_decimal_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv);

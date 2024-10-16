@@ -20,7 +20,4 @@ fi
 
 filename="sidecar-calculations-${VERSION}-${OS}-${ARCH}.tar.gz"
 
-echo $filename
-ls -al sqlite-extension/build/lib/
-
 find sqlite-extension/build/lib -name "libcalculations.*" | xargs tar cvf $filename
