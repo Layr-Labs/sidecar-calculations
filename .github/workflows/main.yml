@@ -31,3 +31,4 @@ jobs:
           sudo cp -r . /arm64-chroot/build
           echo 'Installing deps...'
           sudo chroot /arm64-chroot /build/scripts/installDeps.sh
+          sudo chroot /arm64-chroot /bin/bash -c "cd /build && make release"
