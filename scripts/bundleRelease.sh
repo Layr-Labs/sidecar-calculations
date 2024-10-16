@@ -2,8 +2,15 @@
 
 OS=$(uname -o | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
+VERSION=$(cat .release_version)
 
-filename="sidecar-calculations-${OS}-${ARCH}.tar.gz"
+if [[ -z $VERSION ]]; then
+    echo "No version found, using commit hash"
+    VERSION=$(git rev-parse --short HEAD)
+    exit 1
+fi
+
+filename="sidecar-calculations-${VERSION}-${OS}-${ARCH}.tar.gz"
 
 echo $filename
 
