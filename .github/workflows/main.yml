@@ -25,9 +25,11 @@ jobs:
   #        sudo mount --make-rslave /arm64-chroot/dev/pts/
   #        sudo chroot /arm64-chroot /bin/bash -c "apt-get update && apt-get install -y software-properties-common && add-apt-repository ppa:ubuntu-mozilla-security/ppa"
   #    - name: Set release version
+  #      env:
+  #          REF: ${{ github.ref }}
   #      run: |
-  #        if [[ ${{ github.ref }} == refs/tags/* ]]; then
-  #          echo -n "${{ github.ref }}#refs/tags/" > .release_version
+  #        if [[ $REF == refs/tags/* ]]; then
+  #          echo -n "${REF#refs/tags/}" > .release_version
   #        else
   #          v=$(git rev-parse --short HEAD) && echo -n $v > .release_version
   #        fi
@@ -61,9 +63,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set release version
+        env:
+          REF: ${{ github.ref }}
         run: |
-          if [[ ${{ github.ref }} == refs/tags/* ]]; then
-            echo -n "${{ github.ref }}#refs/tags/" > .release_version
+          if [[ $REF == refs/tags/* ]]; then
+            echo -n "${REF#refs/tags/}" > .release_version
           else
             v=$(git rev-parse --short HEAD) && echo -n $v > .release_version
           fi
@@ -83,9 +87,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set release version
+        env:
+          REF: ${{ github.ref }}
         run: |
-          if [[ ${{ github.ref }} == refs/tags/* ]]; then
-            echo -n "${{ github.ref }}#refs/tags/" > .release_version
+          if [[ $REF == refs/tags/* ]]; then
+            echo -n "${REF#refs/tags/}" > .release_version
           else
             v=$(git rev-parse --short HEAD) && echo -n $v > .release_version
           fi
