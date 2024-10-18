@@ -99,3 +99,42 @@ jobs:
           ./scripts/installDeps.sh
           make release
           aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$(cat .release_version)/
+
+  release:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/tags/v*'
+    needs: [build-linux-amd64, build-macos-arm64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir release || true
+          export release_version="${{ github.ref }}#refs/tags/"
+          aws s3 cp s3://$RELEASE_BUCKET_NAME/$release_version/sidecar-calculations-*.tar.gz ./release/
+          
+          set -x
+          assets=$(find /release -type f -name "sidecar-calculations-*.tar.gz") 
+          for asset in $assets
+          do
+            asset_name=$(basename "$asset")
+            echo "Uploading $asset_name..."
+            curl --fail \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: $(file -b --mime-type "$asset")" \
+              --data-binary @"$asset" \
+              "${{ steps.create_release.outputs.upload_url }}?name=$asset_name"
+          done
+          
