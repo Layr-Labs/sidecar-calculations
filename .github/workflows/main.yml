@@ -1,0 +1,169 @@
+name: build
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
+  
+jobs:
+  #build-linux-arm64:
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v4
+  #    - name: Set up QEMU
+  #      uses: docker/setup-qemu-action@v2
+  #      with:
+  #        platforms: arm64
+  #    - name: Set up ARM64 chroot environment
+  #      run: |
+  #        sudo apt-get update
+  #        sudo apt-get install -y qemu-user-static debootstrap
+  #        sudo mkdir /arm64-chroot
+  #        sudo debootstrap --arch=arm64 --variant=buildd noble /arm64-chroot
+  #        sudo cp /usr/bin/qemu-aarch64-static /arm64-chroot/usr/bin/
+  #        sudo mount -t proc /proc /arm64-chroot/proc/
+  #        sudo mount --rbind /sys /arm64-chroot/sys/
+  #        sudo mount --rbind /dev /arm64-chroot/dev/
+  #        sudo mount --make-rslave /arm64-chroot/dev/
+  #        sudo mount --rbind /dev/pts /arm64-chroot/dev/pts/
+  #        sudo mount --make-rslave /arm64-chroot/dev/pts/
+  #        sudo chroot /arm64-chroot /bin/bash -c "apt-get update && apt-get install -y software-properties-common && add-apt-repository ppa:ubuntu-mozilla-security/ppa"
+  #    - name: Set release version
+  #      env:
+  #          REF: ${{ github.ref }}
+  #      run: |
+  #        if [[ $REF == refs/tags/* ]]; then
+  #          echo -n "${REF#refs/tags/}" > .release_version
+  #        else
+  #          v=$(git rev-parse --short HEAD) && echo -n $v > .release_version
+  #        fi
+  #    - name: Install build dependencies in chroot
+  #      env:
+  #        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #        AWS_REGION: ${{ secrets.AWS_REGION }}
+  #        RELEASE_BUCKET_NAME: ${{ vars.RELEASE_BUCKET_NAME }}
+  #      run: |
+  #        sudo mkdir chroot /arm64-chroot/build
+  #        sudo cp -r . /arm64-chroot/build
+  #        echo 'Installing deps...'
+  #        sudo chroot /arm64-chroot /build/scripts/installDeps.sh
+  #        echo "-------\nwhich cargo\n\n"
+  #        sudo chroot /arm64-chroot /bin/bash -c "which cargo"
+#
+  #        sudo chroot /arm64-chroot /bin/bash -c "cd /build && make release"
+  #        echo "-------"
+  #        sudo cp /arm64-chroot/sidecar-calculations-*.tar.gz .
+  #        aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$(cat .release_version)/
+  #    - name: Upload artifacts
+  #      uses: actions/upload-artifact@v4
+  #      with:
+  #        name: sidecar-calculations-linux-arm64
+  #        path: sidecar-calculations-*.tar.gz
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: test
+        run: |
+          ./scripts/installDeps.sh
+          cargo test
+  build-linux-amd64:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set release version
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          if [[ $REF == refs/tags/* ]]; then
+            echo -n "${REF#refs/tags/}" > .release_version
+          else
+            v=$(git rev-parse --short HEAD) && echo -n $v > .release_version
+          fi
+      - name: Build
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          RELEASE_BUCKET_NAME: ${{ vars.RELEASE_BUCKET_NAME }}
+        run: |
+          ./scripts/installDeps.sh
+          make release
+          aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$(cat .release_version)/
+  build-macos-arm64:
+    needs: [test]
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set release version
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          if [[ $REF == refs/tags/* ]]; then
+            echo -n "${REF#refs/tags/}" > .release_version
+          else
+            v=$(git rev-parse --short HEAD) && echo -n $v > .release_version
+          fi
+      - name: Build
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          RELEASE_BUCKET_NAME: ${{ vars.RELEASE_BUCKET_NAME }}
+        run: |
+          ./scripts/installDeps.sh
+          make release
+          aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$(cat .release_version)/
+
+  create-release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-linux-amd64, build-macos-arm64]
+    permissions: write-all
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_BUCKET_NAME: ${{ vars.RELEASE_BUCKET_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          REF: ${{ github.ref }}
+        run: |
+          set -x
+          mkdir release || true
+          export release_version="${REF#refs/tags/}"
+          aws s3 cp "s3://${RELEASE_BUCKET_NAME}/${release_version}/" ./release --recursive
+          ls -al ./release
+          echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"
+          export upload_url=$(echo "${{ steps.create_release.outputs.upload_url }}" | sed -e "s/{?name,label}//")
+          for asset_name in $(ls ./release);
+          do
+            asset="./release/${asset_name}"
+            echo "Uploading ${asset_name}..."
+            curl --fail \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: $(file -b --mime-type "$asset")" \
+              --data-binary @"$asset" \
+              "${upload_url}?name=$asset_name"
+          done
+          
