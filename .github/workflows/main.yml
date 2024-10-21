@@ -62,8 +62,17 @@ jobs:
   #      with:
   #        name: sidecar-calculations-linux-arm64
   #        path: sidecar-calculations-*.tar.gz
-
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: test
+        run: |
+          ./scripts/installDeps.sh
+          cargo test
   build-linux-amd64:
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -88,6 +97,7 @@ jobs:
           make release
           aws s3 cp sidecar-calculations-*.tar.gz s3://$RELEASE_BUCKET_NAME/$(cat .release_version)/
   build-macos-arm64:
+    needs: [test]
     runs-on: macos-latest
     steps:
       - name: Checkout
