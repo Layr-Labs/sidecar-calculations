@@ -144,6 +144,7 @@ jobs:
           export release_version="${REF#refs/tags/}"
           aws s3 cp "s3://${RELEASE_BUCKET_NAME}/${release_version}/" ./release --recursive
           ls -al ./release
+          echo "Upload URL: ${{ steps.create_release.outputs.upload_url }}"
           for asset_name in $(ls ./release);
           do
             asset="./release/${asset_name}"
@@ -152,6 +153,6 @@ jobs:
               -H "Authorization: token $GITHUB_TOKEN" \
               -H "Content-Type: $(file -b --mime-type "$asset")" \
               --data-binary @"$asset" \
-              "${{ steps.create_release.outputs.upload_url }}?name=$asset_name"
+              "${{ steps.create_release.outputs.upload_url }}$asset_name"
           done
           
