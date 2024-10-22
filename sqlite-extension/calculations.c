@@ -139,6 +139,35 @@ static void sum_big_finalize(sqlite3_context* context) {
     }
 }
 
+// handle removing values that leave the window frame
+static void sum_big_inverse(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    SumContext* ctx = (SumContext*)sqlite3_aggregate_context(context, sizeof(SumContext));
+
+    if (!ctx || !ctx->current_sum) {
+        return;
+    }
+
+    const char* value = (const char*)sqlite3_value_text(argv[0]);
+    if (!value) {
+        return; // Skip NULL values
+    }
+
+    // Subtract the value that's leaving the window
+    char* new_sum = subtract_big_c(ctx->current_sum, value);
+    free(ctx->current_sum);
+    ctx->current_sum = new_sum;
+}
+
+static void sum_big_value(sqlite3_context* context) {
+    SumContext* ctx = (SumContext*)sqlite3_aggregate_context(context, sizeof(SumContext));
+
+    if (ctx && ctx->current_sum) {
+        sqlite3_result_text(context, ctx->current_sum, -1, SQLITE_TRANSIENT);
+    } else {
+        sqlite3_result_null(context);
+    }
+}
+
 void amazon_staker_token_rewards_sqlite(sqlite3_context *context, int argc, sqlite3_value **argv) {
     if (argc != 2) {
         sqlite3_result_error(context, "amazon_staker_token_rewards() requires two arguments", -1);
@@ -411,11 +440,11 @@ int sqlite3_calculations_init(sqlite3 *db, char **pzErrMsg, const sqlite3_api_ro
         return rc;
     }
 
-    rc = sqlite3_create_function(db, "sum_big", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, NULL, NULL, sum_big_step, sum_big_finalize);
+    rc = sqlite3_create_window_function(db, "sum_big", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, NULL, sum_big_step, sum_big_finalize, sum_big_value, sum_big_inverse, NULL);
     if (rc != SQLITE_OK) {
-            *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
-            return rc;
-        }
+        *pzErrMsg = sqlite3_mprintf("Failed to create function: %s", sqlite3_errmsg(db));
+        return rc;
+    }
 
     // Amazon fork calculations
     rc = sqlite3_create_function(db, "amazon_staker_token_rewards", 2, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, amazon_staker_token_rewards_sqlite, 0, 0);
